@@ -1,39 +1,45 @@
 #!/bin/bash
 
-SECRETS_MAPPINGS_PATH="${1:-.psst}"
-ROOT_PATH="${2}"
-KEYCHAIN_PATH="${3}"
+PSST_KEYS_PATH="./.psst/keys"
+PSST_SECRETS_PATH="./.psst/values"
+PSST_KEYCHAIN_PATH="${1}"
 
-KEYS_TO_REPLACE=`awk '{print $1};' ${SECRETS_MAPPINGS_PATH}`
-echo $KEYS_TO_REPLACE
+# make sure we're running from the repo's root dir
+if [[ ! -e ".git" ]]; then
+	echo "This script must be run from the root directory of the repo."
+	exit 64
+fi
+
+KEYS_TO_REPLACE=`awk '{print $1};' ${PSST_KEYS_PATH}`
 for KEY_TO_REPLACE in ${KEYS_TO_REPLACE[@]}; do
-	echo $KEY_TO_REPLACE
-	echo "grep --recursive --files-with-matches $KEY_TO_REPLACE ${ROOT_PATH}"
-		FILES_TO_REPLACE_IN=`grep --recursive --files-with-matches --exclude-dir ./.psst $KEY_TO_REPLACE .`
-		echo $FILES_TO_REPLACE_IN
-		for FILE_TO_REPLACE_IN in ${FILES_TO_REPLACE_IN[@]}; do
-			echo $FILE_TO_REPLACE_IN
-			if [[ $FILE_TO_REPLACE_IN != "${ROOT_PATH}/${SECRETS_MAPPINGS_PATH}" ]]; then
-					# try to get the value from the mapping file
-					VALUE_TO_REPLACE=`grep $KEY_TO_REPLACE ${SECRETS_MAPPINGS_PATH} | awk '{print $2};'`
-					
-					# try indirectly expanding an environment variable of the same name as the key
-					if [[ -z $VALUE_TO_REPLACE ]]; then
-							VALUE_TO_REPLACE="${!KEY_TO_REPLACE}"
-					fi
-					
-					# try to retrieve from specified keychain
-					if [[ -z $VALUE_TO_REPLACE ]]; then
-						VALUE_TO_REPLACE=`security find-generic-password -ga $KEY_TO_REPLACE -w "${KEYCHAIN_PATH}"`
-					fi
-					
-					echo $VALUE_TO_REPLACE
-											
-					if [[ -n $VALUE_TO_REPLACE ]]; then
-							REPLACEMENT_CMD="sed -i '' -e s/$KEY_TO_REPLACE/$VALUE_TO_REPLACE/g $FILE_TO_REPLACE_IN"
-							echo "$REPLACEMENT_CMD"
-							# eval "$REPLACEMENT_CMD"
-					fi
-			fi
-		done
+	# try to get the value from the mapping file
+	if [[ -e $PSST_SECRETS_PATH ]]; then
+		VALUE_TO_REPLACE=`grep $KEY_TO_REPLACE ${PSST_SECRETS_PATH} | awk '{print $2};'`
+	fi
+		
+	# try indirectly expanding an environment variable of the same name as the key
+	if [[ -z $VALUE_TO_REPLACE ]]; then
+		VALUE_TO_REPLACE="${!KEY_TO_REPLACE}"
+	fi
+		
+	# try to retrieve from specified keychain
+	if [[ -z $VALUE_TO_REPLACE ]]; then
+		if [[ -n $PSST_KEYCHAIN_PATH && -e $PSST_KEYCHAIN_PATH ]]; then
+			VALUE_TO_REPLACE=`security find-generic-password -ga $KEY_TO_REPLACE -w "${KEYCHAIN_PATH}"`
+		else
+			echo "No value was found for key $KEY_TO_REPLACE."
+			exit 65
+		fi
+	fi
+		
+	FILES_TO_REPLACE_IN=`grep --recursive --files-with-matches --exclude-dir ./.psst $KEY_TO_REPLACE .`
+	for FILE_TO_REPLACE_IN in ${FILES_TO_REPLACE_IN[@]}; do
+		if [[ $FILE_TO_REPLACE_IN = "${PSST_SECRETS_PATH}" ]]; then
+			continue
+		fi
+										
+		if [[ -n $VALUE_TO_REPLACE ]]; then
+			sed -i '' -e s/$KEY_TO_REPLACE/$VALUE_TO_REPLACE/g $FILE_TO_REPLACE_IN
+		fi
+	done
 done
