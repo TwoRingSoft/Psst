@@ -19,6 +19,11 @@ ANOTHER_SECRET 75h7g458920
 - in environment variables of the same name
 - in a Mac secure keychain committed in the codebase
 
+Then run the script:
+```
+psst [/path/to/keychain]
+```
+
 ## Where?
 
 `brew tap tworingsoft && brew install psst` (in fish, `brew tap tworingsoft; and brew install psst`)
