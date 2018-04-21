@@ -10,6 +10,13 @@ if [[ ! -e ".git" ]]; then
 	exit 64
 fi
 
+if [[ "${1}" = "--help" || "${1}" = "-h" ]]; then
+	echo "usage: psst [</path/to/.../keychain>]"
+	echo
+	echo "Must be run from the root directory of your repository. You must have values stored in one of .psst/values, environment variables or a keychain, which you must unlock yourself."
+	exit 66
+fi
+
 KEYS_TO_REPLACE=`awk '{print $1};' ${PSST_KEYS_PATH}`
 for KEY_TO_REPLACE in ${KEYS_TO_REPLACE[@]}; do
 	# try to get the value from the mapping file

@@ -16,10 +16,10 @@ MY_AWS_SECRET f587vb30298trfo728tvb2079frfht879d4298g6t9r38dt6j89d6rt29
 ANOTHER_SECRET 75h7g458920
 ```
 
-- in environment variables of the same name, as in CI settings
-- in a Mac secure keychain committed in the codebase
+- in environment variables of the same name, as in you CI system's settings
+- in a Mac secure keychain committed in the codebase, which you must ensure is unlocked when `psst` runs
 
-Then run the script:
+Then run from your root directory:
 ```
 psst [/path/to/keychain]
 ```
