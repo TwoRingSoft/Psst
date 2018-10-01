@@ -27,3 +27,11 @@ psst [/path/to/keychain]
 ## Where?
 
 `brew tap tworingsoft && brew install psst` (in fish, `brew tap tworingsoft; and brew install psst`)
+
+# Contribute
+
+Issues and pull requests are welcome! 
+
+If this project helped you, please consider <a href="https://www.paypal.me/armcknight">leaving a tip</a> 🤗
+
+Do you need help with a project? [I'm currently available for hire or contract.](http://tworingsoft.com/contracts).
